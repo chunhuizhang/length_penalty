@@ -72,14 +72,14 @@ def test_make_map_fn(split: str):
         Function that processes individual dataset examples
     """
     def process_fn(example: Dict[str, Any], idx: int) -> Optional[Dict[str, Any]]:
-        question = example.pop('problem')
+        question = example.pop('prompt')[0]['content'].split('\\boxed{}. Question: ')[1]
+        answer = example.pop('reward_model')['ground_truth']
         instruction = "Let's think step by step and output the final answer within \\boxed{}."
         question = f"{question} {instruction}"
-        answer = example.pop('answer')
-        difficulty = example.pop('difficulty')
+        difficulty = example.pop('difficulty', None)
 
         data = {
-            "data_source": "math_hard",
+            "data_source": "aime",
             "prompt": [{
                 "role": "user",
                 "content": question
@@ -122,3 +122,4 @@ if __name__ == '__main__':
 
     aime_dataset = load_dataset('parquet', './data/test_aime_reasoning.parquet')['train']
     aime_dataset = aime_dataset.map(make_map_fn('test'), with_indices=True)
+    aime_dataset.to_parquet(os.path.join(local_dir, 'aime_test.parquet'))
