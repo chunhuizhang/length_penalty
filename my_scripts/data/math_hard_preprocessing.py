@@ -12,7 +12,7 @@ from typing import Dict, List, Optional, Any
 import pandas as pd
 from verl.utils.hdfs_io import copy, makedirs
 from verl.utils.reward_score.math import last_boxed_only_string, remove_boxed
-from datasets import load_dataset
+from datasets import load_dataset, Dataset
 
 def extract_solution(solution_str: str) -> str:
     """Extract the final boxed solution from a solution string.
@@ -116,7 +116,12 @@ if __name__ == '__main__':
 
     math_hard_source = './data/MATH_Hard.parquet'
     # Initialize datasets
-    math_hard_dataset = load_dataset('parquet', math_hard_source)['train']
+    try:
+        math_hard_dataset = load_dataset('parquet', math_hard_source)['train']
+    except Exception as e:
+        math_hard_df = pd.read_parquet(math_hard_source)
+        math_hard_dataset = Dataset.from_pandas(math_hard_df)
+
     math_hard_dataset = math_hard_dataset.map(make_map_fn('train'), with_indices=True)
     math_hard_dataset.to_parquet(os.path.join(local_dir, 'math_hard_train.parquet'))
 
