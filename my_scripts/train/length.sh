@@ -2,10 +2,10 @@ set -x
 
 ray stop
 
-export VLLM_ATTENTION_BACKEND=XFORMERS
-
 NUM_GPUS=$(nvidia-smi --query-gpu=name --format=csv,noheader | wc -l)
+ray start --head --node-ip-address 0.0.0.0 --num-gpus $NUM_GPUS --ray-debugger-external
 
+export VLLM_ATTENTION_BACKEND=XFORMERS
 MODEL_PATH=agentica-org/DeepScaleR-1.5B-Preview
 
 LR=1e-6

@@ -62,6 +62,42 @@ def make_map_fn(split: str):
         return data
     return process_fn
 
+def test_make_map_fn(split: str):
+    """Create a mapping function to process dataset examples.
+
+    Args:
+        split: Dataset split name ('train' or 'test')
+
+    Returns:
+        Function that processes individual dataset examples
+    """
+    def process_fn(example: Dict[str, Any], idx: int) -> Optional[Dict[str, Any]]:
+        question = example.pop('problem')
+        instruction = "Let's think step by step and output the final answer within \\boxed{}."
+        question = f"{question} {instruction}"
+        answer = example.pop('answer')
+        difficulty = example.pop('difficulty')
+
+        data = {
+            "data_source": "math_hard",
+            "prompt": [{
+                "role": "user",
+                "content": question
+            }],
+            "ability": "math",
+            "reward_model": {
+                "style": "rule",
+                "ground_truth": answer
+            },
+            "extra_info": {
+                'split': split,
+                'index': idx,
+                'difficulty': difficulty
+            }
+        }
+        return data
+    return process_fn
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Process datasets for DeepScaler training')
@@ -83,3 +119,6 @@ if __name__ == '__main__':
     math_hard_dataset = load_dataset('parquet', math_hard_source)['train']
     math_hard_dataset = math_hard_dataset.map(make_map_fn('train'), with_indices=True)
     math_hard_dataset.to_parquet(os.path.join(local_dir, 'math_hard_train.parquet'))
+
+    aime_dataset = load_dataset('parquet', './data/test_aime_reasoning.parquet')['train']
+    aime_dataset = aime_dataset.map(make_map_fn('test'), with_indices=True)
