@@ -124,7 +124,12 @@ if __name__ == '__main__':
 
     math_hard_dataset = math_hard_dataset.map(make_map_fn('train'), with_indices=True)
     math_hard_dataset.to_parquet(os.path.join(local_dir, 'math_hard_train.parquet'))
+    
+    try:
+        aime_dataset = load_dataset('parquet', './data/test_aime_reasoning.parquet')['train']
+    except Exception as e:
+        aime_df = pd.read_parquet('./data/test_aime_reasoning.parquet')
+        aime_dataset = Dataset.from_pandas(aime_df)
 
-    aime_dataset = load_dataset('parquet', './data/test_aime_reasoning.parquet')['train']
-    aime_dataset = aime_dataset.map(make_map_fn('test'), with_indices=True)
+    aime_dataset = aime_dataset.map(test_make_map_fn('test'), with_indices=True)
     aime_dataset.to_parquet(os.path.join(local_dir, 'aime_test.parquet'))
